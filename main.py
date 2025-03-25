@@ -4,6 +4,7 @@ from stripsProblem import Planning_problem, boolean
 
 from typing import Set, Dict
 import os
+from time import time
 
 at = lambda b, a: f"{b}_is_at_{a}"
 minerals = lambda a: f"there_are_minerals_on_{a}"
@@ -121,7 +122,6 @@ def create_StarCraft_domain(builders: Set[str], areas: Set[str]) -> STRIPS_domai
                 for a1 in areas
                 for a2 in areas
                 if a1 != a2}
-    print(f"number of features: {len(features)}; number of actions: {len(actions)}")
     return STRIPS_domain(features, actions)
 
 def create_StarCraft_problem(domain: STRIPS_domain, initial_state: Dict[str, bool], goal: Dict[str, bool]) -> Planning_problem:
@@ -131,23 +131,75 @@ def create_StarCraft_problem(domain: STRIPS_domain, initial_state: Dict[str, boo
         full_initial_state[key] = value
     return Planning_problem(domain, full_initial_state, goal)
 
-builders = {"scv"}
-areas = {"sectorA", "sectorB", "mineralFieldA", "mineralFieldB"}
-domain = create_StarCraft_domain(builders, areas)
-problem = create_StarCraft_problem(domain, 
-                                   {scv("scv"): True, location("sectorA"): True, location("sectorB"): True, location("mineralFieldA"): True, location("mineralFieldB"): True, minerals("mineralFieldA"): True, minerals("mineralFieldB"): True, at("scv", "sectorA"): True}, 
-                                   {barracks("sectorA"): True})
-searcher = SearcherMPP(Forward_STRIPS(problem))
-solution = searcher.search()
+# builders = {"scv"}
+# areas = {"sectorA", "sectorB", "mineralFieldA", "mineralFieldB"}
+# domain = create_StarCraft_domain(builders, areas)
+# problem = create_StarCraft_problem(domain, 
+#                                    {scv("scv"): True, location("sectorA"): True, location("sectorB"): True, location("mineralFieldA"): True, location("mineralFieldB"): True, minerals("mineralFieldA"): True, minerals("mineralFieldB"): True, at("scv", "sectorA"): True}, 
+#                                    {barracks("sectorA"): True})
+# searcher = SearcherMPP(Forward_STRIPS(problem))
+# solution = searcher.search()
 
 if not os.path.exists("results"):
     os.makedirs("results")
 
-with open("results/out.txt", "w") as file:
-    result = ""
-    solution_str = solution.__repr__().split("\n")
-    for i, line in enumerate(solution_str[1:]):
+problem_schemas = [
+    (
+        "barracks", 
+        {"scv"},
+        {"sectorA", "sectorB", "mineralFieldA", "mineralFieldB"},
+        {
+            scv("scv"): True,
+            location("sectorA"): True, location("sectorB"): True,
+            location("mineralFieldA"): True, location("mineralFieldB"): True,
+            minerals("mineralFieldA"): True, minerals("mineralFieldB"): True,
+            at("scv", "sectorA"): True
+        },
+        {barracks("sectorA"): True}
+    ),
+    (
+        "fusion_core",
+        {"scv"},
+        {"sectorA", "sectorB", "sectorC", "sectorD", "sectorE", "mineralFieldA", "mineralFieldB", "mineralFieldC", "mineralFieldD", "mineralFieldE"},
+        {
+            scv("scv"): True,
+            location("sectorA"): True, location("sectorB"): True, location("sectorC"): True, location("sectorD"): True, location("sectorE"): True,
+            location("mineralFieldA"): True, location("mineralFieldB"): True, location("mineralFieldC"): True, location("mineralFieldD"): True, location("mineralFieldE"): True,
+            minerals("mineralFieldA"): True, minerals("mineralFieldB"): True, minerals("mineralFieldC"): True, minerals("mineralFieldD"): True, minerals("mineralFieldE"): True,
+            at("scv", "sectorA"): True
+        },
+        {fusion_core("sectorA"): True}
+    ),
+    (
+        "battlecruiser",
+        {"scv"},
+        {"sectorA", "sectorB", "sectorC", "sectorD", "sectorE", "mineralFieldA", "mineralFieldB", "mineralFieldC", "mineralFieldD", "mineralFieldE", "mineralFieldF"},
+        {
+            scv("scv"): True,
+            location("sectorA"): True, location("sectorB"): True, location("sectorC"): True, location("sectorD"): True, location("sectorE"): True,
+            location("mineralFieldA"): True, location("mineralFieldB"): True, location("mineralFieldC"): True, location("mineralFieldD"): True, location("mineralFieldE"): True, location("mineralFieldF"): True,
+            minerals("mineralFieldA"): True, minerals("mineralFieldB"): True, minerals("mineralFieldC"): True, minerals("mineralFieldD"): True, minerals("mineralFieldE"): True, minerals("mineralFieldF"): True,
+            at("scv", "sectorA"): True
+        },
+        {battlecruiser("sectorD"): True}
+    )
+]
+
+for name, builders, areas, initial_state, goal in problem_schemas:
+    print(f"Starting {name}")
+    start_time = time()
+    domain = create_StarCraft_domain(builders, areas)
+    problem = create_StarCraft_problem(domain, initial_state, goal)
+    searcher = SearcherMPP(Forward_STRIPS(problem))
+    solution = searcher.search()
+    end_time = time()
+    print(f"Ending {name}")
+
+    result = f"{name}: {len(domain.feature_domain_dict)} features, {len(domain.actions)} actions; {end_time - start_time}s\n"
+    for i, line in enumerate(solution.__repr__().split("\n")[1:]):
         start = line.find("--")
         end = line.find("-->")
         result += f"{i + 1}. {line[(start + 2):end]}\n"
-    file.write(result)
+
+    with open(f"results/{name}", "w") as file:
+        file.write(result)
