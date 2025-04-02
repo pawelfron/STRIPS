@@ -8,8 +8,8 @@
 # Attribution-NonCommercial-ShareAlike 4.0 International License.
 # See: https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en
 
-from searchGeneric import AStarSearcher
-from searchProblem import Path
+from aipython.searchGeneric import AStarSearcher
+from aipython.searchProblem import Path
 
 class SearcherMPP(AStarSearcher):
     """returns a searcher for a problem.

@@ -8,8 +8,8 @@
 # Attribution-NonCommercial-ShareAlike 4.0 International License.
 # See: https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en
 
-from searchProblem import Arc, Search_problem
-from stripsProblem import Strips, STRIPS_domain
+from aipython.searchProblem import Arc, Search_problem
+from aipython.stripsProblem import Strips, STRIPS_domain
 
 class State(object):
     def __init__(self,assignment):

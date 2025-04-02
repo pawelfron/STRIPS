@@ -1,40 +1,40 @@
-from stripsForwardPlanner import STRIPS_domain, Strips, Forward_STRIPS
-from searchMPP import SearcherMPP
-from stripsProblem import Planning_problem, boolean
+from aipython.stripsForwardPlanner import STRIPS_domain, Strips, Forward_STRIPS
+from aipython.searchMPP import SearcherMPP
+from aipython.stripsProblem import Planning_problem, boolean
 
-from typing import Set, Dict
+from typing import Set, Dict, List, Tuple
 import os
 from time import time
 
-at = lambda b, a: f"{b}_is_at_{a}"
-minerals = lambda a: f"there_are_minerals_on_{a}"
-collected_minerals = lambda b: f"{b}_collected_minerals"
-empty = lambda a: f"{a}_is_empty"
-building = lambda a: f"there_is_a_building_on_{a}"
-scv = lambda b: f"{b}_is_an_scv"
-location = lambda a: f"{a}_is_a_location"
+at = lambda b, a: f"{b} is at {a}"
+minerals = lambda a: f"there are minerals on {a}"
+collected_minerals = lambda b: f"{b} collected_minerals"
+empty = lambda a: f"{a} is empty"
+building = lambda a: f"there is a building on {a}"
+scv = lambda b: f"{b} is_an_scv"
+location = lambda a: f"{a} is_a_location"
 
-marine = lambda a: f"there_is_a_marine_at_{a}"
-tank = lambda a: f"there_is_a_tank_at_{a}"
-wraith = lambda a: f"there_is_a_wraith_at_{a}"
-battlecruiser = lambda a: f"there_is_a_battlecruiser_at_{a}"
-depot = lambda a: f"there_is_a_depot_at_{a}"
-barracks = lambda a: f"there_are_barracks_at_{a}"
-factory = lambda a: f"there_is_a_factory_at_{a}"
-starport = lambda a: f"there_is_a_starport_at_{a}"
-fusion_core = lambda a: f"there_is_a_fusion_core_at_{a}"
+marine = lambda a: f"there is a marine at {a}"
+tank = lambda a: f"there is a tank at {a}"
+wraith = lambda a: f"there is a wraith at {a}"
+battlecruiser = lambda a: f"there is a battlecruiser at {a}"
+depot = lambda a: f"there is a depot at {a}"
+barracks = lambda a: f"there are barracks at {a}"
+factory = lambda a: f"there is a factory at {a}"
+starport = lambda a: f"there is a starport at {a}"
+fusion_core = lambda a: f"there is a fusion core at {a}"
 
-move = lambda b, a1, a2: f"move_{b}_from_{a1}_to_{a2}"
-collect_minerals = lambda b, a: f"{b}_collect_minerals_at_{a}"
-build_supply_depot = lambda b, a: f"{b}_build_supply_depot_at_{a}"
-build_barracks = lambda b, a1, a2: f"{b}_build_barracks_at_{a1}_depot_at_{a2}"
-build_factory = lambda b, a1, a2: f"{b}_build_factory_at_{a1}_barracks_at_{a2}"
-build_starport = lambda b, a1, a2: f"{b}_build_starport_at_{a1}_factory_at_{a2}"
-build_fusion_core = lambda b, a1, a2: f"{b}_build_fusion_core_at_{a1}_starport_at_{a2}"
-train_marine = lambda b, a: f"{b}_train_marine_at_{a}"
-train_tank = lambda b, a: f"{b}_train_tank_at_{a}"
-train_wraith = lambda b, a: f"{b}_train_wraith_at_{a}"
-train_battlecruiser = lambda b, a1, a2: f"{b}_train_battlecruiser_at_{a1}_fusion_core_at_{a2}"
+move = lambda b, a1, a2: f"move {b} from {a1} to {a2}"
+collect_minerals = lambda b, a: f"{b} collect minerals at {a}"
+build_supply_depot = lambda b, a: f"{b} build supply depot at {a}"
+build_barracks = lambda b, a1, a2: f"{b} build barracks at {a1} depot at {a2}"
+build_factory = lambda b, a1, a2: f"{b} build factory at {a1} barracks at {a2}"
+build_starport = lambda b, a1, a2: f"{b} build starport at {a1} factory at {a2}"
+build_fusion_core = lambda b, a1, a2: f"{b} build fusion core at {a1} starport at {a2}"
+train_marine = lambda b, a: f"{b} train marine at {a}"
+train_tank = lambda b, a: f"{b} train tank at {a}"
+train_wraith = lambda b, a: f"{b} train wraith at {a}"
+train_battlecruiser = lambda b, a1, a2: f"{b} train battlecruiser at {a1} fusion core at {a2}"
 
 def create_StarCraft_domain(builders: Set[str], areas: Set[str]) -> STRIPS_domain:
     features = {at(b, a): boolean for b in builders for a in areas}
@@ -131,14 +131,65 @@ def create_StarCraft_problem(domain: STRIPS_domain, initial_state: Dict[str, boo
         full_initial_state[key] = value
     return Planning_problem(domain, full_initial_state, goal)
 
-# builders = {"scv"}
-# areas = {"sectorA", "sectorB", "mineralFieldA", "mineralFieldB"}
-# domain = create_StarCraft_domain(builders, areas)
-# problem = create_StarCraft_problem(domain, 
-#                                    {scv("scv"): True, location("sectorA"): True, location("sectorB"): True, location("mineralFieldA"): True, location("mineralFieldB"): True, minerals("mineralFieldA"): True, minerals("mineralFieldB"): True, at("scv", "sectorA"): True}, 
-#                                    {barracks("sectorA"): True})
-# searcher = SearcherMPP(Forward_STRIPS(problem))
-# solution = searcher.search()
+def get_current_level(state: Dict[str, bool]) -> int:
+    if any([state[battlecruiser(area)] for area in areas]):
+        return 11
+    if any([state[fusion_core(area)] for area in areas]):
+        return 10
+    
+    if any([state[wraith(area)] for area in areas]):
+        return 9
+    if any([state[starport(area)] for area in areas]):
+        return 8
+
+    if any([state[tank(area)] for area in areas]):
+        return 7
+    if any([state[factory(area)] for area in areas]):
+        return 6
+
+    if any([state[marine(area)] for area in areas]):
+        return 5
+    if any([state[barracks(area)] for area in areas]):
+        return 4
+
+    if any([state[depot(area)] for area in areas]):
+        return 2
+ 
+    return 0
+
+def get_goal_level(state: Dict[str, bool]) -> int:
+    if any([battlecruiser(area) in goal for area in areas]):
+        return 11
+    if any([fusion_core(area) in goal for area in areas]):
+        return 10
+
+    if any([wraith(area) in goal for area in areas]):
+        return 9
+    if any([starport(area) in goal for area in areas]):
+        return 8
+
+    if any([tank(area) in goal for area in areas]):
+        return 7
+    if any([factory(area) in goal for area in areas]):
+        return 6
+
+    if any([marine(area) in goal for area in areas]):
+        return 5
+    if any([barracks(area) in goal for area in areas]):
+        return 4
+
+    if any([depot(area) in goal for area in areas]):
+        return 2
+    
+    return 0
+
+def heuristic(state: Dict[str, bool], goal: Dict[str, bool]) -> int:
+    current_level = get_current_level(state)
+    goal_level = get_goal_level(goal)
+
+    return goal_level - current_level
+
+
 
 if not os.path.exists("results"):
     os.makedirs("results")
@@ -158,42 +209,92 @@ problem_schemas = [
         {barracks("sectorA"): True}
     ),
     (
-        "fusion_core",
+        "barracks_with_subgoals", 
         {"scv"},
-        {"sectorA", "sectorB", "sectorC", "sectorD", "sectorE", "mineralFieldA", "mineralFieldB", "mineralFieldC", "mineralFieldD", "mineralFieldE"},
+        {"sectorA", "sectorB", "mineralFieldA", "mineralFieldB", "mineralFieldC"},
         {
             scv("scv"): True,
-            location("sectorA"): True, location("sectorB"): True, location("sectorC"): True, location("sectorD"): True, location("sectorE"): True,
+            location("sectorA"): True, location("sectorB"): True,
+            location("mineralFieldA"): True, location("mineralFieldB"): True, location("mineralFieldC"): True,
+            minerals("mineralFieldA"): True, minerals("mineralFieldB"): True, minerals("mineralFieldC"): True,
+            at("scv", "sectorA"): True
+        },
+        {depot("sectorB"): True, empty("mineralFieldC"): False, barracks("sectorA"): True}
+    ),
+    (
+        "marine",
+        {"scv"},
+        {"sectorA", "sectorB", "mineralFieldA", "mineralFieldB", "mineralFieldC"},
+        {
+            scv("scv"): True,
+            location("sectorA"): True, location("sectorB"): True,
+            location("mineralFieldA"): True, location("mineralFieldB"): True, location("mineralFieldC"): True,
+            minerals("mineralFieldA"): True, minerals("mineralFieldB"): True, minerals("mineralFieldC"): True,
+            at("scv", "sectorA"): True
+        },
+        {marine("sectorA"): True}
+    ),
+    (
+        "marine_with_subgoals",
+        {"scv"},
+        {"sectorA", "sectorB", "sectorC", "mineralFieldA", "mineralFieldB", "mineralFieldC", "mineralFieldD"},
+        {
+            scv("scv"): True,
+            location("sectorA"): True, location("sectorB"): True, location("sectorC"): True,
+            location("mineralFieldA"): True, location("mineralFieldB"): True, location("mineralFieldC"): True, location("mineralFieldD"): True,
+            minerals("mineralFieldA"): True, minerals("mineralFieldB"): True, minerals("mineralFieldC"): True, minerals("mineralFieldD"): True,
+            at("scv", "sectorA"): True
+        },
+        {barracks("sectorA"): True, barracks("sectorB"): True, marine("sectorA"): True}
+    ),
+    (
+        "tank",
+        {"scv"},
+        {"sectorA", "sectorB", "sectorC", "mineralFieldA", "mineralFieldB", "mineralFieldC", "mineralFieldD"},
+        {
+            scv("scv"): True,
+            location("sectorA"): True, location("sectorB"): True, location("sectorC"): True,
+            location("mineralFieldA"): True, location("mineralFieldB"): True, location("mineralFieldC"): True, location("mineralFieldD"): True,
+            minerals("mineralFieldA"): True, minerals("mineralFieldB"): True, minerals("mineralFieldC"): True, minerals("mineralFieldD"): True,
+            at("scv", "sectorA"): True
+        },
+        {tank("sectorA"): True}
+    ),
+    (
+        "tank_with_subgoals",
+        {"scv"},
+        {"sectorA", "sectorB", "sectorC", "mineralFieldA", "mineralFieldB", "mineralFieldC", "mineralFieldD", "mineralFieldE"},
+        {
+            scv("scv"): True,
+            location("sectorA"): True, location("sectorB"): True, location("sectorC"): True,
             location("mineralFieldA"): True, location("mineralFieldB"): True, location("mineralFieldC"): True, location("mineralFieldD"): True, location("mineralFieldE"): True,
             minerals("mineralFieldA"): True, minerals("mineralFieldB"): True, minerals("mineralFieldC"): True, minerals("mineralFieldD"): True, minerals("mineralFieldE"): True,
             at("scv", "sectorA"): True
         },
-        {fusion_core("sectorA"): True}
+        {barracks("sectorB"): True, marine("sectorB"): True, tank("sectorA"): True}
     ),
     (
-        "battlecruiser",
+        "three_marines",
         {"scv"},
-        {"sectorA", "sectorB", "sectorC", "sectorD", "sectorE", "mineralFieldA", "mineralFieldB", "mineralFieldC", "mineralFieldD", "mineralFieldE", "mineralFieldF"},
+        {"sectorA", "sectorB", "sectorC", "sectorD", "mineralFieldA", "mineralFieldB", "mineralFieldC", "mineralFieldD", "mineralFieldE", "mineralFieldF", "mineralFieldG"},
         {
             scv("scv"): True,
-            location("sectorA"): True, location("sectorB"): True, location("sectorC"): True, location("sectorD"): True, location("sectorE"): True,
-            location("mineralFieldA"): True, location("mineralFieldB"): True, location("mineralFieldC"): True, location("mineralFieldD"): True, location("mineralFieldE"): True, location("mineralFieldF"): True,
-            minerals("mineralFieldA"): True, minerals("mineralFieldB"): True, minerals("mineralFieldC"): True, minerals("mineralFieldD"): True, minerals("mineralFieldE"): True, minerals("mineralFieldF"): True,
+            location("sectorA"): True, location("sectorB"): True, location("sectorC"): True, location("sectorD"): True,
+            location("mineralFieldA"): True, location("mineralFieldB"): True, location("mineralFieldC"): True, location("mineralFieldD"): True, location("mineralFieldE"): True, location("mineralFieldF"): True, location("mineralFieldG"): True,
+            minerals("mineralFieldA"): True, minerals("mineralFieldB"): True, minerals("mineralFieldC"): True, minerals("mineralFieldD"): True, minerals("mineralFieldE"): True, minerals("mineralFieldF"): True, minerals("mineralFieldG"): True,
             at("scv", "sectorA"): True
         },
-        {battlecruiser("sectorD"): True}
+        {marine("sectorA"): True, marine("sectorD"): True, marine("sectorC"): True}
     )
 ]
 
 for name, builders, areas, initial_state, goal in problem_schemas:
-    print(f"Starting {name}")
     start_time = time()
     domain = create_StarCraft_domain(builders, areas)
     problem = create_StarCraft_problem(domain, initial_state, goal)
-    searcher = SearcherMPP(Forward_STRIPS(problem))
+    searcher = SearcherMPP(Forward_STRIPS(problem, heuristic))
     solution = searcher.search()
     end_time = time()
-    print(f"Ending {name}")
 
     result = f"{name}: {len(domain.feature_domain_dict)} features, {len(domain.actions)} actions; {end_time - start_time}s\n"
     for i, line in enumerate(solution.__repr__().split("\n")[1:]):
@@ -202,4 +303,21 @@ for name, builders, areas, initial_state, goal in problem_schemas:
         result += f"{i + 1}. {line[(start + 2):end]}\n"
 
     with open(f"results/{name}", "w") as file:
+        file.write(result)
+
+for name, builders, areas, initial_state, goal in problem_schemas:
+    start_time = time()
+    domain = create_StarCraft_domain(builders, areas)
+    problem = create_StarCraft_problem(domain, initial_state, goal)
+    searcher = SearcherMPP(Forward_STRIPS(problem))
+    solution = searcher.search()
+    end_time = time()
+
+    result = f"{name} no heuristic: {len(domain.feature_domain_dict)} features, {len(domain.actions)} actions; {end_time - start_time}s\n"
+    for i, line in enumerate(solution.__repr__().split("\n")[1:]):
+        start = line.find("--")
+        end = line.find("-->")
+        result += f"{i + 1}. {line[(start + 2):end]}\n"
+
+    with open(f"results/{name}_no_heuristic", "w") as file:
         file.write(result)

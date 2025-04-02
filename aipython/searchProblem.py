@@ -8,8 +8,8 @@
 # Attribution-NonCommercial-ShareAlike 4.0 International License.
 # See: https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en
 
-from display import Displayable
-import matplotlib.pyplot as plt
+from aipython.display import Displayable
+# import matplotlib.pyplot as plt
 import random
 
 class Search_problem(Displayable):
@@ -114,16 +114,16 @@ class Search_problem_from_explicit_graph(Search_problem):
             res += f"{arc}.  "
         return res
 
-    def show(self, fontsize=10, node_color='orange', show_costs = True):
-        """Show the graph as a figure
-        """
-        self.fontsize = fontsize
-        self.show_costs = show_costs
-        plt.ion()   # interactive
-        ax = plt.figure().gca()
-        ax.set_axis_off()
-        plt.title(self.title, fontsize=fontsize)
-        self.show_graph(ax, node_color)
+    # def show(self, fontsize=10, node_color='orange', show_costs = True):
+    #     """Show the graph as a figure
+    #     """
+    #     self.fontsize = fontsize
+    #     self.show_costs = show_costs
+    #     plt.ion()   # interactive
+    #     ax = plt.figure().gca()
+    #     ax.set_axis_off()
+    #     plt.title(self.title, fontsize=fontsize)
+    #     self.show_graph(ax, node_color)
 
     def show_graph(self, ax, node_color='orange'): 
         bbox = dict(boxstyle="round4,pad=1.0,rounding_size=0.5",facecolor=node_color)
