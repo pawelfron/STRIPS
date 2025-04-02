@@ -133,54 +133,44 @@ def create_StarCraft_problem(domain: STRIPS_domain, initial_state: Dict[str, boo
 
 def get_current_level(state: Dict[str, bool]) -> int:
     if any([state[battlecruiser(area)] for area in areas]):
-        return 11
+        return 5.5
     if any([state[fusion_core(area)] for area in areas]):
-        return 10
-    
-    if any([state[wraith(area)] for area in areas]):
-        return 9
-    if any([state[starport(area)] for area in areas]):
-        return 8
-
-    if any([state[tank(area)] for area in areas]):
-        return 7
-    if any([state[factory(area)] for area in areas]):
-        return 6
-
-    if any([state[marine(area)] for area in areas]):
         return 5
-    if any([state[barracks(area)] for area in areas]):
+    if any([state[wraith(area)] for area in areas]):
+        return 4.5
+    if any([state[starport(area)] for area in areas]):
         return 4
-
-    if any([state[depot(area)] for area in areas]):
+    if any([state[tank(area)] for area in areas]):
+        return 3.5
+    if any([state[factory(area)] for area in areas]):
+        return 3
+    if any([state[marine(area)] for area in areas]):
+        return 2.5
+    if any([state[barracks(area)] for area in areas]):
         return 2
- 
+    if any([state[depot(area)] for area in areas]):
+        return 1
     return 0
 
-def get_goal_level(state: Dict[str, bool]) -> int:
+def get_goal_level(goal: Dict[str, bool]) -> int:
     if any([battlecruiser(area) in goal for area in areas]):
-        return 11
+        return 5.5
     if any([fusion_core(area) in goal for area in areas]):
-        return 10
-
-    if any([wraith(area) in goal for area in areas]):
-        return 9
-    if any([starport(area) in goal for area in areas]):
-        return 8
-
-    if any([tank(area) in goal for area in areas]):
-        return 7
-    if any([factory(area) in goal for area in areas]):
-        return 6
-
-    if any([marine(area) in goal for area in areas]):
         return 5
-    if any([barracks(area) in goal for area in areas]):
+    if any([wraith(area) in goal for area in areas]):
+        return 4.5
+    if any([starport(area) in goal for area in areas]):
         return 4
-
-    if any([depot(area) in goal for area in areas]):
+    if any([tank(area) in goal for area in areas]):
+        return 3.5
+    if any([factory(area) in goal for area in areas]):
+        return 3
+    if any([marine(area) in goal for area in areas]):
+        return 2.5
+    if any([barracks(area) in goal for area in areas]):
         return 2
-    
+    if any([depot(area) in goal for area in areas]):
+        return 1
     return 0
 
 def heuristic(state: Dict[str, bool], goal: Dict[str, bool]) -> int:
@@ -188,8 +178,6 @@ def heuristic(state: Dict[str, bool], goal: Dict[str, bool]) -> int:
     goal_level = get_goal_level(goal)
 
     return goal_level - current_level
-
-
 
 if not os.path.exists("results"):
     os.makedirs("results")
@@ -272,20 +260,21 @@ problem_schemas = [
             at("scv", "sectorA"): True
         },
         {barracks("sectorB"): True, marine("sectorB"): True, tank("sectorA"): True}
-    ),
-    (
-        "three_marines",
-        {"scv"},
-        {"sectorA", "sectorB", "sectorC", "sectorD", "mineralFieldA", "mineralFieldB", "mineralFieldC", "mineralFieldD", "mineralFieldE", "mineralFieldF", "mineralFieldG"},
-        {
-            scv("scv"): True,
-            location("sectorA"): True, location("sectorB"): True, location("sectorC"): True, location("sectorD"): True,
-            location("mineralFieldA"): True, location("mineralFieldB"): True, location("mineralFieldC"): True, location("mineralFieldD"): True, location("mineralFieldE"): True, location("mineralFieldF"): True, location("mineralFieldG"): True,
-            minerals("mineralFieldA"): True, minerals("mineralFieldB"): True, minerals("mineralFieldC"): True, minerals("mineralFieldD"): True, minerals("mineralFieldE"): True, minerals("mineralFieldF"): True, minerals("mineralFieldG"): True,
-            at("scv", "sectorA"): True
-        },
-        {marine("sectorA"): True, marine("sectorD"): True, marine("sectorC"): True}
     )
+    # ,
+    # (
+    #     "three_marines",
+    #     {"scv"},
+    #     {"sectorA", "sectorB", "sectorC", "sectorD", "mineralFieldA", "mineralFieldB", "mineralFieldC", "mineralFieldD", "mineralFieldE", "mineralFieldF", "mineralFieldG"},
+    #     {
+    #         scv("scv"): True,
+    #         location("sectorA"): True, location("sectorB"): True, location("sectorC"): True, location("sectorD"): True,
+    #         location("mineralFieldA"): True, location("mineralFieldB"): True, location("mineralFieldC"): True, location("mineralFieldD"): True, location("mineralFieldE"): True, location("mineralFieldF"): True, location("mineralFieldG"): True,
+    #         minerals("mineralFieldA"): True, minerals("mineralFieldB"): True, minerals("mineralFieldC"): True, minerals("mineralFieldD"): True, minerals("mineralFieldE"): True, minerals("mineralFieldF"): True, minerals("mineralFieldG"): True,
+    #         at("scv", "sectorA"): True
+    #     },
+    #     {marine("sectorA"): True, marine("sectorD"): True, marine("sectorC"): True}
+    # )
 ]
 
 for name, builders, areas, initial_state, goal in problem_schemas:
